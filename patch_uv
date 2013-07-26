@@ -1,0 +1,199 @@
+From e496c3c213445e81fbecf6105e356da0f680daf1 Mon Sep 17 00:00:00 2001
+From: Hong-Mei Li <a21834@motorola.com>
+Date: Fri, 5 Jul 2013 02:33:53 +0800
+Subject: [PATCH] msm: memutils: memcpy, memmove optimization
+
+1. To fit 8x26 64-bytes cache line size, we change preload steps as 64Bytes.
+2. According to tune result, change preload distance as 5 cache lines.
+3. According to tune result, re-arrange the ld/str order as back-to-back
+   for copy_from_user.
+
+The markable improvement:
+	memcpy : 5%
+	copy_to_user : 9%
+	copy_from_user : 13%
+	memmove : 37%
+
+Raw data is as below:
+
+BASELINE:
+	memcpy 1000MB at 5MB       : took 1547098 usec, bandwidth 646.646 MB/s
+	copy_to_user 1000MB at 5MB : took 1704308 usec, bandwidth 586.586 MB/s
+	copy_from_user 1000MB at 5M: took 1777090 usec, bandwidth 562.562 MB/s
+	memmove 1000GB at 5MB      : took 1066205 usec, bandwidth 937.937 MB/s
+	copy_to_user 1000GB at 4kB : took 1774866 usec, bandwidth 563.563 MB/s
+	copy_from_user 1000GB at 4k: took 1797654 usec, bandwidth 556.556 MB/s
+	copy_page 1000GB at 4kB    : took 1644606 usec, bandwidth 608.608 MB/s
+	memmove 1000GB at 4kB      : took 1236227 usec, bandwidth 808.808 MB/s
+
+THIS PATCH:
+	memcpy 1000MB at 5MB       : took 1475835 usec, bandwidth 677.677 MB/s
+	copy_to_user 1000MB at 5MB : took 1559060 usec, bandwidth 641.641 MB/s
+	copy_from_user 1000MB at 5M: took 1561603 usec, bandwidth 640.640 MB/s
+	memmove 1000GB at 5MB      : took 861664 usec, bandwidth 1160.160 MB/s
+	copy_to_user 1000GB at 4kB : took 1673501 usec, bandwidth 597.597 MB/s
+	copy_from_user 1000GB at 4k: took 1674006 usec, bandwidth 597.597 MB/s
+	copy_page 1000GB at 4kB    : took 1691358 usec, bandwidth 591.591 MB/s
+	memmove 1000GB at 4kB      : took 882985 usec, bandwidth 1132.132 MB/s
+
+Change-Id: I83bec3b7a9dd9cd88890eaa7ec423363e230a651
+Signed-off-by: Hong-Mei Li <a21834@motorola.com>
+Reviewed-on: http://gerrit.pcs.mot.com/550383
+SLT-Approved: Slta Waiver <sltawvr@motorola.com>
+Tested-by: Jira Key <jirakey@motorola.com>
+Reviewed-by: Klocwork kwcheck <klocwork-kwcheck@sourceforge.mot.com>
+Reviewed-by: Check Patch <CHEKPACH@motorola.com>
+Reviewed-by: Yi-Wei Zhao <gbjc64@motorola.com>
+Submit-Approved: Jira Key <jirakey@motorola.com>
+---
+ arch/arm/mach-msm/memutils/copy_from_user.S | 19 ++++++++++++++++---
+ arch/arm/mach-msm/memutils/copy_template.S  | 24 +++++++++---------------
+ arch/arm/mach-msm/memutils/memmove.S        | 17 +++++++----------
+ 3 files changed, 32 insertions(+), 28 deletions(-)
+
+diff --git a/arch/arm/mach-msm/memutils/copy_from_user.S b/arch/arm/mach-msm/memutils/copy_from_user.S
+index 5059a63..b6ea5b4 100644
+--- a/arch/arm/mach-msm/memutils/copy_from_user.S
++++ b/arch/arm/mach-msm/memutils/copy_from_user.S
+@@ -69,9 +69,22 @@
+ 	.endm
+ 
+ 	.macro ldstr8w ptrl ptrw reg1 reg2 reg3 reg4 reg5 reg6 reg7 reg8 abort
+-	ldr4w \ptrl, \reg1, \reg2, \reg3, \reg4, \abort
+-	ldr4w \ptrl, \reg5, \reg6, \reg7, \reg8, \abort
+-	stmia \ptrw!, {\reg1, \reg2, \reg3, \reg4, \reg5, \reg6, \reg7, \reg8}
++	ldr1w \ptrl, \reg1, \abort
++	str1w \ptrw, \reg1, \abort
++	ldr1w \ptrl, \reg2, \abort
++	str1w \ptrw, \reg2, \abort
++	ldr1w \ptrl, \reg3, \abort
++	str1w \ptrw, \reg3, \abort
++	ldr1w \ptrl, \reg4, \abort
++	str1w \ptrw, \reg4, \abort
++	ldr1w \ptrl, \reg5, \abort
++	str1w \ptrw, \reg5, \abort
++	ldr1w \ptrl, \reg6, \abort
++	str1w \ptrw, \reg6, \abort
++	ldr1w \ptrl, \reg7, \abort
++	str1w \ptrw, \reg7, \abort
++	ldr1w \ptrl, \reg8, \abort
++	str1w \ptrw, \reg8, \abort
+ 	.endm
+ 
+ 	.macro str1b ptr reg cond=al abort
+diff --git a/arch/arm/mach-msm/memutils/copy_template.S b/arch/arm/mach-msm/memutils/copy_template.S
+index 3a87dd21..aeab848 100644
+--- a/arch/arm/mach-msm/memutils/copy_template.S
++++ b/arch/arm/mach-msm/memutils/copy_template.S
+@@ -90,21 +90,18 @@
+ 	CALGN(	add	pc, r4, ip		)
+ 
+ 	PLD(	pld	[r1, #0]		)
+-2:	PLD(	subs	r2, r2, #448		)
++2:	PLD(	subs	r2, r2, #192		)
+ 	/* R2 is now -480 offset from the size passed in*/
+ 	PLD(	pld	[r1, #64]		)
++	PLD(	blt	4f			)
+ 	PLD(	pld	[r1, #128]		)
+ 	PLD(	pld	[r1, #192]		)
+-	PLD(	blt	4f			)
+-	PLD(	pld	[r1, #256]		)
+-	PLD(	pld	[r1, #320]		)
+-	PLD(	pld	[r1, #384]		)
+-	PLD(	pld	[r1, #448]		)
+-3:	PLD(	pld	[r1, #512]		)
++
++3:	PLD(	pld	[r1, #256]		)
+ 4:	PLD(	ldstr8w	r1, r0, r3, r4, r5, r6, r7, r8, ip, lr, abort=20f )
+ 		subs	r2, r2, #32
+ 		bge	3b
+-	PLD(	cmn	r2, #448		)
++	PLD(	cmn	r2, #192		)
+ 	PLD(	bge	4b			)
+ 
+ 5:		ands	ip, r2, #28
+@@ -192,14 +189,11 @@
+ 11:		stmfd	sp!, {r5 - r9}
+ 
+ 	PLD(	pld	[r1, #0]		)
+-	PLD(	subs	r2, r2, #320		)
++	PLD(	subs	r2, r2, #128		)
+ 	PLD(	pld	[r1, #64]		)
+-	PLD(	pld	[r1, #128]		)
+ 	PLD(	blt	13f			)
+-	PLD(	pld	[r1, #192]		)
+-	PLD(	pld	[r1, #256]		)
+-	PLD(	pld	[r1, #320]		)
+-12:	PLD(	pld	[r1, #384]		)
++	PLD(	pld	[r1, #128]		)
++12:	PLD(	pld	[r1, #192]		)
+ 13:		ldr4w	r1, r4, r5, r6, r7, abort=19f
+ 		mov	r3, lr, pull #\pull
+ 		subs	r2, r2, #32
+@@ -221,7 +215,7 @@
+ 		orr	ip, ip, lr, push #\push
+ 		str8w	r0, r3, r4, r5, r6, r7, r8, r9, ip, , abort=19f
+ 		bge	12b
+-	PLD(	cmn	r2, #320		)
++	PLD(	cmn	r2, #128		)
+ 	PLD(	bge	13b			)
+ 
+ 		ldmfd	sp!, {r5 - r9}
+diff --git a/arch/arm/mach-msm/memutils/memmove.S b/arch/arm/mach-msm/memutils/memmove.S
+index 9eb6551..0f6b3b2 100644
+--- a/arch/arm/mach-msm/memutils/memmove.S
++++ b/arch/arm/mach-msm/memutils/memmove.S
+@@ -56,20 +56,19 @@ ENTRY(memmove)
+ 	CALGN(	add	pc, r4, ip		)
+ 
+ 	PLD(	pld	[r1, #-4]		)
+-2:	PLD(	subs	r2, r2, #320		)
++2:	PLD(	subs	r2, r2, #192		)
+ 	PLD(	pld	[r1, #-68]		)
+ 	PLD(	pld	[r1, #-132]		)
+ 	PLD(	blt	4f			)
+ 	PLD(	pld	[r1, #-196]		)
+-	PLD(	pld	[r1, #-260]		)
+-	PLD(	pld	[r1, #-324]		)
+ 
+-3:	PLD(	pld	[r1, #-388]		)
++3:	PLD(	pld	[r1, #-260]		)
++
+ 4:		ldmdb	r1!, {r3, r4, r5, r6, r7, r8, ip, lr}
+ 		subs	r2, r2, #32
+ 		stmdb	r0!, {r3, r4, r5, r6, r7, r8, ip, lr}
+ 		bge	3b
+-	PLD(	cmn	r2, #320		)
++	PLD(	cmn	r2, #192		)
+ 	PLD(	bge	4b			)
+ 
+ 5:		ands	ip, r2, #28
+@@ -141,14 +140,12 @@ ENTRY(memmove)
+ 11:		stmfd	sp!, {r5 - r9}
+ 
+ 	PLD(	pld	[r1, #-4]		)
+-	PLD(	subs	r2, r2, #320		)
++	PLD(	subs	r2, r2, #192		)
+ 	PLD(	pld	[r1, #-68]		)
+ 	PLD(	pld	[r1, #-132]		)
+ 	PLD(	blt	13f			)
+ 	PLD(	pld	[r1, #-196]		)
+-	PLD(	pld	[r1, #-260]		)
+-	PLD(	pld	[r1, #-324]		)
+-12:	PLD(	pld	[r1, #-388]		)
++12:	PLD(	pld	[r1, #-260]		)
+ 13:		ldmdb   r1!, {r7, r8, r9, ip}
+ 		mov     lr, r3, push #\push
+ 		subs    r2, r2, #32
+@@ -170,7 +167,7 @@ ENTRY(memmove)
+ 		orr     r4, r4, r3, pull #\pull
+ 		stmdb   r0!, {r4 - r9, ip, lr}
+ 		bge	12b
+-	PLD(	cmn	r2, #320		)
++	PLD(	cmn	r2, #192		)
+ 	PLD(	bge	13b			)
+ 
+ 		ldmfd	sp!, {r5 - r9}
+-- 
+1.8.5.5
+
