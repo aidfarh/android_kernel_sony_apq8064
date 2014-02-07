@@ -17,6 +17,10 @@
 #ifndef _LINUX_SYNAPTICS_I2C_RMI_H
 #define _LINUX_SYNAPTICS_I2C_RMI_H
 
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_DT2WAKE
+#include <linux/input.h>
+#endif
+
 #define SYNAPTICS_I2C_RMI_NAME "synaptics-rmi-ts"
 
 enum {
@@ -53,7 +57,7 @@ struct synaptics_i2c_rmi_platform_data {
 };
 
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_DT2WAKE
-extern void sweep2wake_setdev(struct input_dev * input_device);
+extern void dt2wake_setdev(struct input_dev * input_device);
 #endif
 
 #endif /* _LINUX_SYNAPTICS_I2C_RMI_H */
