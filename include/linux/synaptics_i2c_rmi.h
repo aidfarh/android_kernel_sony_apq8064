@@ -17,7 +17,7 @@
 #ifndef _LINUX_SYNAPTICS_I2C_RMI_H
 #define _LINUX_SYNAPTICS_I2C_RMI_H
 
-#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_DT2WAKE
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 #include <linux/input.h>
 #endif
 
@@ -56,8 +56,8 @@ struct synaptics_i2c_rmi_platform_data {
 	int8_t sensitivity_adjust;
 };
 
-#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_DT2WAKE
-extern void dt2wake_setdev(struct input_dev * input_device);
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
+extern void sweep2wake_setdev(struct input_dev * input_device);
 #endif
 
 #endif /* _LINUX_SYNAPTICS_I2C_RMI_H */
