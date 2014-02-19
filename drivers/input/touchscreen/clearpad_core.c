@@ -2577,10 +2577,10 @@ static ssize_t synaptics_clearpad_wakeup_gesture_store(struct device *dev,
 
 	LOCK(this);
 
-	if (sysfs_streq(buf, "1")) {
+	if (dt2w_switch) {
 		this->easy_wakeup_config.gesture_enable = true;
 		device_init_wakeup(&this->pdev->dev, 1);
-	} else if (sysfs_streq(buf, "0")) {
+	} else if (!dt2w_switch) {
 		this->easy_wakeup_config.gesture_enable = false;
 		device_init_wakeup(&this->pdev->dev, 0);
 	} else {
