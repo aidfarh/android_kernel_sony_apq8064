@@ -1909,6 +1909,16 @@ exit:
 	return rc;
 }
 
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE 
+static void dt2w_func() {
+ 
+      printk("[Sweep2Wake]: OFF->ON\n");
+      cancel_pwrtrigger = 0;
+      sweep2wake_pwrtrigger();
+      return;
+}
+#endif 
+
 static int synaptics_clearpad_handle_gesture(struct synaptics_clearpad *this)
 {
 	u8 wakeint;
