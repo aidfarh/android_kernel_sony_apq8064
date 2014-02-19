@@ -21,9 +21,6 @@
 #include <linux/platform_device.h>
 #include <linux/log2.h>
 #include <linux/workqueue.h>
-#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
-#include <linux/synaptics_i2c_rmi.h>
-#endif
 
 #include <linux/mfd/pm8xxx/core.h>
 #include <linux/input/pmic8xxx-pwrkey.h>
@@ -225,11 +222,6 @@ static int __devinit pmic8xxx_pwrkey_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&pwrkey->confirm_work, confirm_key_status);
 
 	platform_set_drvdata(pdev, pwrkey);
-
-	#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
-     	sweep2wake_setdev(pwr);
-     	printk(KERN_INFO "[Sweep2Wake]: set device %s\n", pwr->name);
-   	#endif
 
 	err = request_any_context_irq(key_press_irq, pwrkey_press_irq,
 		IRQF_TRIGGER_RISING, "pmic8xxx_pwrkey_press", pwrkey);
