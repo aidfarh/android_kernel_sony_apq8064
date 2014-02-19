@@ -1909,16 +1909,6 @@ exit:
 	return rc;
 }
 
-#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE 
-static void dt2w_func() {
- 
-      printk("[Sweep2Wake]: OFF->ON\n");
-      cancel_pwrtrigger = 0;
-      sweep2wake_pwrtrigger();
-      return;
-}
-#endif 
-
 static int synaptics_clearpad_handle_gesture(struct synaptics_clearpad *this)
 {
 	u8 wakeint;
@@ -1942,15 +1932,6 @@ static int synaptics_clearpad_handle_gesture(struct synaptics_clearpad *this)
 	case XY_LPWG_STATUS_DOUBLE_TAP_DETECTED:
 		rc = evgen_execute(this->input, this->evgen_blocks,
 					"double_tap");
-		
-		#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
-     		if(dt2w_switch == 1)
-		{
-			wakeup_normal=false;
-        		dt2w_func();
-		}     		
-		#endif 		
-
 		break;
 	case XY_LPWG_STATUS_SWIPE_DETECTED:
 		rc = evgen_execute(this->input, this->evgen_blocks,
