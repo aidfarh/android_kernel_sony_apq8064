@@ -2770,7 +2770,7 @@ static int synaptics_clearpad_pm_suspend(struct device *dev)
 	if (rc)
 		return rc;
 
-	if (device_may_wakeup(dev)) {	
+	if (device_may_wakeup(dev)||dt2w_switch==1||s2w_switch==1) {	
 		enable_irq_wake(this->pdata->irq);
 		dev_info(&this->pdev->dev, "enable irq wake");
 		return 0;
@@ -2786,7 +2786,7 @@ static int synaptics_clearpad_pm_resume(struct device *dev)
 	bool irq_pending;
 	int rc = 0;
 
-	if (device_may_wakeup(dev)) {
+	if (device_may_wakeup(dev)||dt2w_switch==1||s2w_switch==1) {
 		disable_irq_wake(this->pdata->irq);
 		dev_info(&this->pdev->dev, "disable irq wake");
 		return 0;
