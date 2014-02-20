@@ -2754,6 +2754,9 @@ static int synaptics_clearpad_pm_suspend(struct device *dev)
 	unsigned long flags;
 	int rc = 0;
 
+	#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE	
+	if (device_may_wakeup(dev)||dt2w_switch==1||s2w_switch==1) {
+	#else
 	spin_lock_irqsave(&this->slock, flags);
 	if (unlikely(this->dev_busy)) {
 		dev_info(dev, "Busy to suspend\n");
@@ -2770,12 +2773,35 @@ static int synaptics_clearpad_pm_suspend(struct device *dev)
 	if (rc)
 		return rc;
 
-	if (device_may_wakeup(dev)||dt2w_switch==1||s2w_switch==1) {	
+	if (device_may_wakeup(dev)) {	
 		enable_irq_wake(this->pdata->irq);
 		dev_info(&this->pdev->dev, "enable irq wake");
 		return 0;
 	}
 
+	return 0;
+		
+	#endif
+		enable_irq_wake(this->pdata->irq);
+		dev_info(&this->pdev->dev, "enable irq wake");
+		return 0;
+	}
+
+	spin_lock_irqsave(&this->slock, flags);
+	if (unlikely(this->dev_busy)) {
+		dev_info(dev, "Busy to suspend\n");
+		spin_unlock_irqrestore(&this->slock, flags);
+		return -EBUSY;
+	}
+	this->dev_busy = true;
+	spin_unlock_irqrestore(&this->slock, flags);
+
+#ifdef CONFIG_FB
+	if (!this->pm_suspended)
+#endif
+		rc = synaptics_clearpad_suspend(&this->pdev->dev);
+	if (rc)
+		return rc;
 	return 0;
 }
 
@@ -2786,7 +2812,11 @@ static int synaptics_clearpad_pm_resume(struct device *dev)
 	bool irq_pending;
 	int rc = 0;
 
+	#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE	
 	if (device_may_wakeup(dev)||dt2w_switch==1||s2w_switch==1) {
+	#else
+	if (device_may_wakeup(dev)) {
+	#endif
 		disable_irq_wake(this->pdata->irq);
 		dev_info(&this->pdev->dev, "disable irq wake");
 		return 0;
