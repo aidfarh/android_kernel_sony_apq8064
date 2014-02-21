@@ -2534,10 +2534,10 @@ static ssize_t synaptics_clearpad_wakeup_gesture_store(struct device *dev,
 
 	LOCK(this);
 
-	if ((sysfs_streq(buf, "1"))||(dt2w_switch==1)||(s2w_switch==1)) {
+	if (sysfs_streq(buf, "1")) {
 		this->easy_wakeup_config.gesture_enable = true;
 		device_init_wakeup(&this->pdev->dev, 1);
-	} else if ((sysfs_streq(buf, "0"))||((dt2w_switch!=1)&&(s2w_switch!=1))) {
+	} else if (sysfs_streq(buf, "0")) {
 		this->easy_wakeup_config.gesture_enable = false;
 		device_init_wakeup(&this->pdev->dev, 0);
 	} else {
@@ -2743,6 +2743,12 @@ static int synaptics_clearpad_resume(struct device *dev)
 	this->pm_suspended = false;
 #endif
 	UNLOCK(this);
+
+	if(dt2w_switch==1||s2w_switch==1)
+	{
+		printk("[Sweep2Wake]: Fixing any glitches");
+		synaptics_clearpad_reset_power(this);
+	}
 
 	rc = synaptics_clearpad_set_power(this);
 	return rc;
