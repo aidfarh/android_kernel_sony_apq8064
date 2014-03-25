@@ -784,7 +784,7 @@ static int msm_otg_suspend(struct msm_otg *motg)
 	struct usb_bus *bus = phy->otg->host;
 	struct msm_otg_platform_data *pdata = motg->pdata;
 	int cnt = 0;
-	bool host_bus_suspend, device_bus_suspend, dcp;
+	bool host_bus_suspend, device_bus_suspend, dcp, prop_charger;
 	u32 phy_ctrl_val = 0, cmd_val;
 	unsigned ret;
 	u32 portsc;
@@ -799,6 +799,7 @@ static int msm_otg_suspend(struct msm_otg *motg)
 		test_bit(A_BUS_SUSPEND, &motg->inputs) &&
 		motg->caps & ALLOW_LPM_ON_DEV_SUSPEND;
 	dcp = motg->chg_type == USB_DCP_CHARGER;
+	prop_charger = motg->chg_type == USB_PROPRIETARY_CHARGER;
 
 	/*
 	 * Abort suspend when,
@@ -807,7 +808,7 @@ static int msm_otg_suspend(struct msm_otg *motg)
 	 */
 
 	if ((test_bit(B_SESS_VLD, &motg->inputs) && !device_bus_suspend &&
-		!dcp) || test_bit(A_BUS_REQ, &motg->inputs)) {
+		!dcp && !prop_charger) || test_bit(A_BUS_REQ, &motg->inputs)) {
 		enable_irq(motg->irq);
 		return -EBUSY;
 	}
@@ -875,7 +876,7 @@ static int msm_otg_suspend(struct msm_otg *motg)
 	 */
 	cmd_val = readl_relaxed(USB_USBCMD);
 	if (host_bus_suspend || device_bus_suspend ||
-		(motg->pdata->otg_control == OTG_PHY_CONTROL && dcp))
+		(motg->pdata->otg_control == OTG_PHY_CONTROL))
 		cmd_val |= ASYNC_INTR_CTRL | ULPI_STP_CTRL;
 	else
 		cmd_val |= ULPI_STP_CTRL;
@@ -1229,6 +1230,7 @@ static void msm_otg_start_host(struct usb_otg *otg, int on)
 	struct msm_otg *motg = container_of(otg->phy, struct msm_otg, phy);
 	struct msm_otg_platform_data *pdata = motg->pdata;
 	struct usb_hcd *hcd;
+	int rc;
 
 	if (!otg->host)
 		return;
@@ -1250,6 +1252,17 @@ static void msm_otg_start_host(struct usb_otg *otg, int on)
 		if (pdata->setup_gpio)
 			pdata->setup_gpio(OTG_STATE_A_HOST);
 		ulpi_init(motg, pdata->phy_init_seq_host);
+
+		/*
+		 * Increase 3.3V rail voltage to increase cross over voltage.
+		 * This is required to get some full speed audio headsets
+		 * working.
+		 */
+		rc = regulator_set_voltage(hsusb_3p3, USB_PHY_3P3_VOL_MAX,
+				USB_PHY_3P3_VOL_MAX);
+		if (rc)
+			dev_dbg(otg->phy->dev, "unable to increase 3.3V rail\n");
+
 		usb_add_hcd(hcd, hcd->irq, IRQF_SHARED);
 	} else {
 		dev_dbg(otg->phy->dev, "host off\n");
@@ -1264,6 +1277,11 @@ static void msm_otg_start_host(struct usb_otg *otg, int on)
 		if (pdata->otg_control == OTG_PHY_CONTROL)
 			ulpi_write(otg->phy, OTG_COMP_DISABLE,
 				ULPI_CLR(ULPI_PWR_CLK_MNG_REG));
+
+		rc = regulator_set_voltage(hsusb_3p3, USB_PHY_3P3_VOL_MIN,
+				USB_PHY_3P3_VOL_MAX);
+		if (rc)
+			dev_dbg(otg->phy->dev, "unable to restore 3.075V rail\n");
 	}
 }
 
