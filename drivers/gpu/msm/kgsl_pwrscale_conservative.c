@@ -210,7 +210,6 @@ static struct attribute *conservative_attrs[] = {
 
 static struct attribute_group conservative_attr_group = {
     .attrs = conservative_attrs,
-    .name = "conservative",
 };
 
 static int conservative_init(struct kgsl_device *device, struct kgsl_pwrscale *pwrscale)
