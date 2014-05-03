@@ -107,7 +107,7 @@ static void check_temp(struct work_struct *work)
 	{
 		if (unlikely(cpu_stats.throttling))
 		{
-			limit_cpu_freqs(cpu_stats.policy.cpuinfo.max_freq);
+			limit_cpu_freqs(cpu_stats.thermal_steps[6]);
 			cpu_stats.throttling = false;
 		}
 
