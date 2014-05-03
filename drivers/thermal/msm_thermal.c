@@ -27,13 +27,13 @@
 
 static struct cpus {
 	bool throttling;
-	int thermal_steps[5];
+	int thermal_steps[7];
 	uint32_t limited_max_freq;
 	unsigned int max_freq;
 	struct cpufreq_policy policy;
 } cpu_stats = {
 	.throttling = false,
-	.thermal_steps = {729600, 918000, 1026000, 1242000},
+	.thermal_steps = {594000, 810000, 918000, 1026000, 1242000, 1350000, 1512000},
 	.limited_max_freq = UINT_MAX,
 };
 
@@ -114,21 +114,27 @@ static void check_temp(struct work_struct *work)
 		goto reschedule;
 	}
 
-	if (temp >= (temp_threshold + 12))
+	if (temp >= (temp_threshold + 15))
 		freq = cpu_stats.thermal_steps[0];
-	else if (temp >= (temp_threshold + 9))
+	else if (temp >= (temp_threshold + 12))
 		freq = cpu_stats.thermal_steps[1];
-	else if (temp >= (temp_threshold + 5))
+	else if (temp >= (temp_threshold + 9))
 		freq = cpu_stats.thermal_steps[2];
-	else
+	else if (temp >= (temp_threshold + 6))
 		freq = cpu_stats.thermal_steps[3];
+	else if (temp >= (temp_threshold + 3))
+		freq = cpu_stats.thermal_steps[4];
+	else if (temp >= (temp_threshold))
+		freq = cpu_stats.thermal_steps[5];
+	else 
+		freq = cpu_stats.thermal_steps[6];
 
 	limit_cpu_freqs(freq);
 
 	cpu_stats.throttling = true;
 
 reschedule:
-	queue_delayed_work(wq, &check_temp_work, msecs_to_jiffies(250));
+	queue_delayed_work(wq, &check_temp_work, msecs_to_jiffies(1000));
 }
 
 int __devinit msm_thermal_init(struct msm_thermal_data *pdata)
