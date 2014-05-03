@@ -38,6 +38,7 @@ static struct cpus {
 };
 
 unsigned int temp_threshold = 70;
+unsigned int dynamic_time = 1000;
 module_param(temp_threshold, int, 0755);
 
 static struct msm_thermal_data msm_thermal_info;
@@ -107,23 +108,32 @@ static void check_temp(struct work_struct *work)
 	{
 		if (unlikely(cpu_stats.throttling))
 		{
+			dynamic_time = 1000*(temp_threshold-temp);
 			limit_cpu_freqs(cpu_stats.thermal_steps[6]);
 			cpu_stats.throttling = false;
+			pr_info("%s: Everything's OK. I'll go nap for %d\n",
+				KBUILD_MODNAME, dynamic_time);
 		}
 
 		goto reschedule;
 	}
 
-	if (temp >= (temp_threshold + 15))
+	if (temp >= (temp_threshold + 15))	{
 		freq = cpu_stats.thermal_steps[0];
+		dynamic_time = 100;	
+	}
 	else if (temp >= (temp_threshold + 12))
 		freq = cpu_stats.thermal_steps[1];
-	else if (temp >= (temp_threshold + 9))
+	else if (temp >= (temp_threshold + 9))	{
 		freq = cpu_stats.thermal_steps[2];
+		dynamic_time = 250;
+	}
 	else if (temp >= (temp_threshold + 6))
 		freq = cpu_stats.thermal_steps[3];
-	else if (temp >= (temp_threshold + 3))
+	else if (temp >= (temp_threshold + 3))	{
 		freq = cpu_stats.thermal_steps[4];
+		dynamic_time = 500;
+	}
 	else if (temp >= (temp_threshold))
 		freq = cpu_stats.thermal_steps[5];
 	else 
@@ -134,7 +144,7 @@ static void check_temp(struct work_struct *work)
 	cpu_stats.throttling = true;
 
 reschedule:
-	queue_delayed_work(wq, &check_temp_work, msecs_to_jiffies(1000));
+	queue_delayed_work(wq, &check_temp_work, msecs_to_jiffies(dynamic_time));
 }
 
 int __devinit msm_thermal_init(struct msm_thermal_data *pdata)
