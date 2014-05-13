@@ -347,12 +347,12 @@ CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-KERNELFLAGS	= -munaligned-access -fgcse-lm -fgcse-sm -fsingle-precision-constant -fforce-addr -fsched-spec-load -mtune=cortex-a15 -mcpu=cortex-a15 -march=armv7ve -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -fpredictive-commoning
+KERNELFLAGS	= -munaligned-access -fgcse-lm -fgcse-sm -fsingle-precision-constant -fforce-addr -fsched-spec-load -mtune=cortex-a15 -mcpu=cortex-a15 -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -fpredictive-commoning
 MODFLAGS	= -DMODULE $(KERNELFLAGS)
 CFLAGS_MODULE   = $(MODFLAGS)
 AFLAGS_MODULE   = $(MODFLAGS)
 LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
-CFLAGS_KERNEL	= $(KERNELFLAGS)
+CFLAGS_KERNEL	= $(KERNELFLAGS) -fgraphite -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block
 AFLAGS_KERNEL	= $(KERNELFLAGS)
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
@@ -370,10 +370,11 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-           -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
+		   -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
 		   -Wno-sizeof-pointer-memaccess \
                    -fmodulo-sched -fmodulo-sched-allow-regmoves \
-		   -mfpu=neon-vfpv4 -mtune=cortex-a15  -mcpu=cortex-a15 -march=armv7ve
+		   -mfpu=neon-vfpv4 -mtune=cortex-a15  -mcpu=cortex-a15 -fgraphite -floop-parallelize-all \
+		   -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
