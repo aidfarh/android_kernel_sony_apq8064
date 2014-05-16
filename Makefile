@@ -349,9 +349,9 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
 CFLAGS_MODULE   =
 AFLAGS_MODULE   =
-LDFLAGS_MODULE  =
-CFLAGS_KERNEL	=
-AFLAGS_KERNEL	=
+LDFLAGS_MODULE  = 
+CFLAGS_KERNEL	= -mfpu=neon-vfpv4 
+AFLAGS_KERNEL	=  
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
 
