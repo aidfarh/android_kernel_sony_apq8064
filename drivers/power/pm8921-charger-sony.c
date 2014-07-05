@@ -36,6 +36,9 @@
 
 #include <mach/msm_xo.h>
 #include <mach/msm_hsusb.h>
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+#endif
 
 #define CHG_BUCK_CLOCK_CTRL	0x14
 #define CHG_BUCK_CLOCK_CTRL_8038	0xD

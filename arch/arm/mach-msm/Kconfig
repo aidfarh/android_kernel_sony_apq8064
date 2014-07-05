@@ -2975,7 +2975,6 @@ config LCD_KCAL
         default y
         help
           Enable MSM generic LCDC temperature Calibration.
-
 config FORCE_FAST_CHARGE
 	bool "Force AC charge mode at will"
 	default y
