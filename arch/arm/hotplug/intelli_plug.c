@@ -21,6 +21,7 @@
 #include <linux/slab.h>
 #include <linux/input.h>
 #include <linux/cpufreq.h>
+#include <mach/cpufreq.h>
 
 #ifdef CONFIG_POWERSUSPEND
 #include <linux/powersuspend.h>
@@ -332,31 +333,34 @@ static void __cpuinit intelli_plug_work_fn(struct work_struct *work)
 }
 
 #if defined(CONFIG_POWERSUSPEND) || defined(CONFIG_HAS_EARLYSUSPEND)
+static void set_max_freq(int cpu, uint32_t max_freq)
+{
+	int ret = msm_cpufreq_set_freq_limits(cpu, MSM_CPUFREQ_NO_LIMIT, max_freq);
+	struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
+
+	if (ret)
+		return;
+
+	if (!policy)
+		return;
+
+	cpufreq_cpu_put(policy);
+}
+
 static void screen_off_limit(bool on)
 {
-	unsigned int i, ret;
-	struct cpufreq_policy policy;
-	struct ip_cpu_info *l_ip_info;
+	unsigned int i;
 
 	/* not active, so exit */
 	if (screen_off_max == UINT_MAX)
 		return;
 
 	for_each_online_cpu(i) {
-		l_ip_info = &per_cpu(ip_info, i);
-		ret = cpufreq_get_policy(&policy, i);
-		if (ret)
-			continue;
-
 		if (on) {
-			/* save current instance */
-			l_ip_info->curr_max = policy.max;
-			policy.max = screen_off_max;
+			set_max_freq(i, screen_off_max);
 		} else {
-			/* restore */
-			policy.max = l_ip_info->curr_max;
+			set_max_freq(i, MSM_CPUFREQ_NO_LIMIT);
 		}
-		cpufreq_update_policy(i);
 	}
 }
 
