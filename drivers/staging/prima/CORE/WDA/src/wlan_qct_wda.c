@@ -1780,7 +1780,7 @@ uint8 WDA_IsWcnssWlanCompiledVersionGreaterThanOrEqual(uint8 major, uint8 minor,
 {    
     VOS_STATUS status = VOS_STATUS_SUCCESS;
     v_CONTEXT_t vosContext = vos_get_global_context(VOS_MODULE_ID_WDA, NULL);
-    tSirVersionType compiledVersion;
+    tSirVersionType uninitialized_var(compiledVersion);
     status = WDA_GetWcnssWlanCompiledVersion(vosContext, &compiledVersion);
     if ((compiledVersion.major > major) || ((compiledVersion.major == major)&& (compiledVersion.minor > minor)) ||
         ((compiledVersion.major == major)&& (compiledVersion.minor == minor) &&(compiledVersion.version > version)) ||
@@ -1798,7 +1798,7 @@ uint8 WDA_IsWcnssWlanReportedVersionGreaterThanOrEqual(uint8 major, uint8 minor,
 {    
     VOS_STATUS status = VOS_STATUS_SUCCESS;
     v_CONTEXT_t vosContext = vos_get_global_context(VOS_MODULE_ID_WDA, NULL);
-    tSirVersionType reportedVersion;
+    tSirVersionType uninitialized_var(reportedVersion);
     status = WDA_GetWcnssWlanReportedVersion(vosContext, &reportedVersion);
     if ((reportedVersion.major > major) || ((reportedVersion.major == major)&& (reportedVersion.minor > minor)) ||
         ((reportedVersion.major == major)&& (reportedVersion.minor == minor) &&(reportedVersion.version > version)) ||

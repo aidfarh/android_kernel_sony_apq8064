@@ -489,8 +489,8 @@ eHalStatus csrStart(tpAniSirGlobal pMac)
 
 eHalStatus csrStop(tpAniSirGlobal pMac)
 {
-    tANI_U32 sessionId;
-    tANI_U32 i;
+    tANI_U32 sessionId = 0;
+    tANI_U32 i = 0;
 
     for(sessionId = 0; sessionId < CSR_ROAM_SESSION_MAX; sessionId++)
     {
@@ -606,7 +606,7 @@ eHalStatus csrRoamOpen(tpAniSirGlobal pMac)
 
 eHalStatus csrRoamClose(tpAniSirGlobal pMac)
 {
-    tANI_U32 sessionId;
+    tANI_U32 sessionId = 0;
     for(sessionId = 0; sessionId < CSR_ROAM_SESSION_MAX; sessionId++)
     {
         csrRoamCloseSession(pMac, sessionId, TRUE, NULL, NULL);
@@ -2281,7 +2281,7 @@ eHalStatus csrRoamIssueDisassociate( tpAniSirGlobal pMac, tANI_U32 sessionId,
 {   
     eHalStatus status = eHAL_STATUS_SUCCESS;
     tCsrBssid bssId = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-    tANI_U16 reasonCode;
+    tANI_U16 reasonCode = 0;
     tCsrRoamSession *pSession = CSR_GET_SESSION( pMac, sessionId );
 
     if(!pSession)
@@ -3436,7 +3436,7 @@ void csrRoamCcmCfgSetCallback(tHalHandle hHal, tANI_S32 result)
     tpAniSirGlobal pMac = PMAC_STRUCT( hHal );
 
     tListElem *pEntry = csrLLPeekHead(&pMac->sme.smeCmdActiveList, LL_ACCESS_LOCK);
-    tANI_U32 sessionId;
+    tANI_U32 sessionId = 0;
     tSmeCmd *pCommand = NULL;
 
     if(NULL == pEntry)
@@ -4217,7 +4217,7 @@ static eHalStatus csrRoam( tpAniSirGlobal pMac, tSmeCmd *pCommand )
 }
 eHalStatus csrProcessFTReassocRoamCommand ( tpAniSirGlobal pMac, tSmeCmd *pCommand )
 {
-    tANI_U32 sessionId;
+    tANI_U32 sessionId = 0;
     tCsrRoamSession *pSession;
     tCsrScanResult *pScanResult = NULL;
     tSirBssDescription *pBssDesc = NULL;
@@ -7801,7 +7801,7 @@ void csrRoamJoinedStateMsgProcessor( tpAniSirGlobal pMac, void *pMsgBuf )
             tSirSmeAssocIndToUpperLayerCnf *pUpperLayerAssocCnf;
             tCsrRoamInfo roamInfo;
             tCsrRoamInfo *pRoamInfo = NULL;
-            tANI_U32 sessionId;
+            tANI_U32 sessionId = 0;
             eHalStatus status;
             smsLog( pMac, LOG1, FL("ASSOCIATION confirmation can be given to upper layer "));
             palZeroMemory(pMac->hHdd, &roamInfo, sizeof(tCsrRoamInfo));
@@ -14300,7 +14300,7 @@ eHalStatus csrGetRssi(tpAniSirGlobal pMac,
 {  
    eHalStatus status = eHAL_STATUS_SUCCESS;
    vos_msg_t  msg;
-   tANI_U32 sessionId;
+   tANI_U32 sessionId = 0;
 
    tAniGetRssiReq *pMsg;
    smsLog(pMac, LOG2, FL("called"));

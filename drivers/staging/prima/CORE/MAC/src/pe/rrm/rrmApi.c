@@ -280,7 +280,7 @@ rrmProcessLinkMeasurementRequest( tpAniSirGlobal pMac,
                                   tDot11fLinkMeasurementRequest *pLinkReq,
                                   tpPESession pSessionEntry )
 {
-   tSirMacLinkReport LinkReport;
+   tSirMacLinkReport LinkReport = {0};
    tpSirMacMgmtHdr   pHdr;
    v_S7_t            currentRSSI = 0;
 

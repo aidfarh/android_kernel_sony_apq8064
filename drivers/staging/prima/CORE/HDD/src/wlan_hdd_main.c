@@ -226,7 +226,7 @@ static int hdd_netdev_notifier_call(struct notifier_block * nb,
    hdd_adapter_t *pAdapter = WLAN_HDD_GET_PRIV_PTR(dev);
    hdd_context_t *pHddCtx;
 #ifdef WLAN_BTAMP_FEATURE
-   VOS_STATUS status;
+   VOS_STATUS uninitialized_var(status);
    hdd_context_t *pHddCtx;
 #endif
    long result;
@@ -7128,7 +7128,7 @@ int wlan_hdd_scan_abort(hdd_adapter_t *pAdapter)
 {
     hdd_context_t *pHddCtx = WLAN_HDD_GET_CTX(pAdapter);
     hdd_scaninfo_t *pScanInfo = NULL;
-    int status;
+    int status = 0;
 
     pScanInfo = &pHddCtx->scan_info;
     if (pScanInfo->mScanPending)
