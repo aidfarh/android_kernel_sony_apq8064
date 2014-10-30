@@ -68,6 +68,8 @@ static int persist_count = 0;
 
 static bool suspended = false;
 
+extern bool touch_boost = false;
+
 struct ip_cpu_info {
 	unsigned int sys_max;
 	unsigned int cur_max;
@@ -461,6 +463,7 @@ static void intelli_plug_input_event(struct input_handle *handle,
 #ifdef DEBUG_INTELLI_PLUG
 	pr_info("intelli_plug touched!\n");
 #endif
+	touch_boost = true;
 	queue_delayed_work_on(0, intelliplug_wq, &intelli_plug_boost,
 		msecs_to_jiffies(10));
 }
