@@ -69,6 +69,7 @@ static int persist_count = 0;
 static bool suspended = false;
 
 extern bool touch_boost = false;
+extern bool plug_boost;
 
 struct ip_cpu_info {
 	unsigned int sys_max;
@@ -249,6 +250,7 @@ static void unplug_cpu(int min_active_cpu)
 		if (cpu > min_active_cpu)
 			if (l_ip_info->cpu_nr_running < l_nr_threshold)
 				cpu_down(cpu);
+		plug_boost = true;
 	}
 }
 

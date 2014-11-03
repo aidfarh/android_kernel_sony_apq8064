@@ -40,6 +40,7 @@ static int opt_pos = OPTIMAL_POSITION;
 static unsigned int dbs_enable, down_requests, prev_table_position, freq_table_position, min_sampling_rate;
 bool early_suspended = false;
 extern bool touch_boost;
+bool plug_boost = false;
 bool hyst_flag = false;
 
 struct cpu_dbs_info_s {
@@ -278,6 +279,12 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 				freq_table_position = opt_pos;
 			}
 		} else {
+			down_requests = 0;
+		}
+
+		if (plug_boost) {
+			freq_table_position = TABLE_SIZE - 1;	//boost for hotplugging
+			plug_boost = false;
 			down_requests = 0;
 		}
 
