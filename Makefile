@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 4
 SUBLEVEL = 86
-EXTRAVERSION = -Rojak-kernel-v4
+EXTRAVERSION = -Rojak-kernel-v5
 NAME = Saber-toothed Squirrel
 
 # *DOCUMENTATION*
