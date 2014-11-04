@@ -28,7 +28,7 @@
 #define OPTIMAL_POSITION		(3)
 #define TABLE_SIZE			(11)
 #define HYSTERESIS			(7)
-#define UP_THRESH			(95)
+#define UP_THRESH			(100)
 
 static const int valid_fqs[TABLE_SIZE] = {384000, 486000, 594000, 702000,
 			918000, 1026000, 1134000, 1242000, 1350000,
